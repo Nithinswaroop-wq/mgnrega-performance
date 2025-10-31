@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGNREGA Dashboard - Uttar Pradesh</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          background-color: #f4f6f8;
+          color: #333;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-height: 100vh;
+        }
+
+        .gov-header {
+          background: white;
+          border-bottom: 4px solid #1a5f23;
+          text-align: center;
+          padding: 10px;
+          width: 100%;
+        }
+
+        .gov-header img {
+          height: 60px;
+          vertical-align: middle;
+          margin-right: 10px;
+        }
+
+        .gov-header h1 {
+          color: #2e7d32;
+          font-size: 22px;
+          margin: 5px 0 0 0;
+        }
+
+        .gov-header p {
+          font-size: 14px;
+          color: #444;
+          margin: 0;
+        }
+
+        .inner-header {
+          background: #1a5f23;
+          color: white;
+          padding: 12px;
+          text-align: center;
+          font-weight: bold;
+          font-size: 18px;
+          width: 100%;
+        }
+
+        .page {
+          display: none;
+          max-width: 700px;
+          width: 90%;
+          background: white;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 0 8px rgba(0,0,0,0.1);
+          margin-top: 12vh;
+          text-align: center;
+        }
+
+        .active {
+          display: block;
+        }
+
+        .btn {
+          display: block;
+          width: 100%;
+          margin: 8px 0;
+          padding: 12px;
+          border: none;
+          border-radius: 6px;
+          background-color: #1a5f23;
+          color: white;
+          font-size: 15px;
+          cursor: pointer;
+        }
+
+        .btn.back {
+          background-color: #555;
+        }
+
+        .district-list {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          margin-top: 20px;
+        }
+
+        .district {
+          background: #e8f5e9;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          text-align: center;
+          padding: 10px;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+
+        .district:hover {
+          background: #c8e6c9;
+        }
+
+        .stat {
+          background: #f9f9f9;
+          padding: 12px;
+          border-left: 4px solid #1a5f23;
+          border-radius: 5px;
+          margin: 8px 0;
+        }
+
+        .best {
+          background: #28a745;
+          color: white;
+        }
+
+        .worst {
+          background: #dc3545;
+          color: white;
+        }
+
+        .loading {
+          text-align: center;
+          padding: 20px;
+        }
+    </style>
+</head>
+<body>
+<!-- Government Banner -->
+<div class="gov-header">
+    <img src="mg.jpg" alt="Gov Logo">
+    <h1>MAHATMA GANDHI NATIONAL RURAL EMPLOYMENT GUARANTEE SCHEME</h1>
+    <p>Ministry of Rural Development, Government of India</p>
+</div>
+
+<!-- Sub Header -->
+<div class="inner-header">State: UTTAR PRADESH</div>
+
+<!-- Page 1: Location -->
+<div class="page active" id="page1">
+    <button class="btn" onclick="getLocation()">📍 Enable Location</button>
+    <button class="btn" onclick="showPage('page2')">Select District Manually</button>
+</div>
+
+<!-- Page 2: Districts -->
+<div class="page" id="page2">
+    <h3>Select Your District</h3>
+    <div class="district-list" id="districts"></div>
+    <button class="btn back" onclick="showPage('page1')">← Back</button>
+</div>
+
+<!-- Page 3: Performance -->
+<div class="page" id="page3">
+    <h3 id="districtName">District Performance</h3>
+    <div id="loading" class="loading" style="display: none;">
+        <div>Loading district data...</div>
+    </div>
+    <div id="performance"></div>
+    <button class="btn" onclick="showRankings()">Compare All Districts</button>
+    <button class="btn back" onclick="showPage('page2')">← Back</button>
+</div>
+
+<!-- Page 4: Rankings -->
+<div class="page" id="page4">
+    <h3>District Rankings</h3>
+    <div id="rankings"></div>
+    <button class="btn back" onclick="showPage('page3')">← Back</button>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api';
+
+    // --- DEFAULT RANKINGS (Hardcoded in Frontend) ---
+    const defaultRankings = [
+      { district: "LUCKNOW", rank: 1, rating: "Excellent" },
+      { district: "GHAZIABAD", rank: 2, rating: "Excellent" },
+      { district: "KANPUR NAGAR", rank: 3, rating: "Excellent" },
+      { district: "VARANASI", rank: 4, rating: "Good" },
+      { district: "AGRA", rank: 5, rating: "Good" },
+      { district: "MEERUT", rank: 6, rating: "Good" },
+      { district: "AYODHYA", rank: 7, rating: "Good" },
+      { district: "ALIGARH", rank: 8, rating: "Average" },
+      { district: "AMBEDKAR NAGAR", rank: 9, rating: "Average" },
+      { district: "GORAKHPUR", rank: 10, rating: "Average" },
+      { district: "BAREILLY", rank: 11, rating: "Average" },
+      { district: "MORADABAD", rank: 12, rating: "Average" },
+      { district: "SAHARANPUR", rank: 13, rating: "Needs Improvement" },
+      { district: "JHANSI", rank: 14, rating: "Needs Improvement" },
+      { district: "BALLIA", rank: 15, rating: "Needs Improvement" }
+    ];
+
+    // --- PAGE SWITCH ---
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // --- LOCATION DETECTION ---
+    async function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const district = await detectDistrictFromLocation(position);
+            if (district) {
+              await showPerformance(district);
+            } else {
+              alert("Could not detect your district. Please select manually.");
+              showPage("page2");
+            }
+          },
+          () => {
+            alert("Location access denied. Please select district manually.");
+            showPage("page2");
+          }
+        );
+      } else {
+        alert("Geolocation not supported. Please select district manually.");
+        showPage("page2");
+      }
+    }
+
+    // --- DETECT DISTRICT FROM LOCATION ---
+    async function detectDistrictFromLocation(position) {
+      try {
+        const response = await fetch(`${API_BASE}/detect-district`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        }
+      } catch (error) {
+        console.error('Error detecting district:', error);
+      }
+      return null;
+    }
+
+    // --- DISTRICTS ---
+    const districts = [
+      "AGRA","ALIGARH","AMBEDKAR NAGAR","AMETHI","AMROHA","AURAIYA","AYODHYA","AZAMGARH","BAGHPAT","BAHRAICH","BALLIA","BALRAMPUR","BANDA","BARABANKI","BAREILLY","BASTI","BHADOHI","BIJNOR","BUDAUN","BULANDSHAHR","CHANDAULI","CHITRAKOOT","DEORIA","ETAH","ETAWAH","FAIZABAD","FARRUKHABAD","FATEHPUR","FIROZABAD","GAUTAM BUDDHA NAGAR","GHAZIABAD","GHAZIPUR","GONDA","GORAKHPUR","HAMIRPUR","HAPUR","HARDOI","HATHRAS","JALAUN","JAUNPUR","JHANSI","KANNAUJ","KANPUR DEHAT","KANPUR NAGAR","KASGANJ","KAUSHAMBI","KHERI (LAKHIMPUR)","KUSHI NAGAR","LALITPUR","LUCKNOW","MAHARAJGANJ","MAHOBA","MAINPURI","MATHURA","MAU","MEERUT","MIRZAPUR","MORADABAD","MUZAFFARNAGAR","PILIBHIT","PRATAPGARH","PRAYAGRAJ","RAE BARELI","RAMPUR","SAHARANPUR","SAMBHAL","SANT KABEER NAGAR","SANT RAVIDAS NAGAR","SHAHJAHANPUR","SHAMLI","SHRAVASTI","SIDDHARTH NAGAR","SITAPUR","SONBHADRA","SULTANPUR","UNNAO","VARANASI"
+    ];
+
+    // Load district list
+    function loadDistricts() {
+      const container = document.getElementById("districts");
+      container.innerHTML = districts.map(d =>
+        `<div class='district' onclick="showPerformance('${d}')">${d}</div>`
+      ).join("");
+    }
+
+    // --- SHOW PERFORMANCE DATA FROM BACKEND ---
+    async function showPerformance(districtName) {
+      showPage("page3");
+      document.getElementById("districtName").innerText = `${districtName} - MGNREGA Performance`;
+
+      // Show loading
+      document.getElementById("loading").style.display = 'block';
+      document.getElementById("performance").innerHTML = '';
+
+      try {
+        const response = await fetch(`${API_BASE}/performance/${encodeURIComponent(districtName)}`);
+
+        if (!response.ok) throw new Error('Failed to fetch data');
+
+        const data = await response.json();
+
+        // Display the performance data from backend
+        document.getElementById("performance").innerHTML = `
+          <div class="stat">📊 Job Cards Issued: ${data.jobCardsIssued || 'N/A'}</div>
+          <div class="stat">👥 Total Workers: ${data.totalWorkers || 'N/A'}</div>
+          <div class="stat">✅ Active Workers: ${data.activeWorkers || 'N/A'}</div>
+          <div class="stat">💰 Approved Labour Budget: ${data.approvedLabourBudget || 'N/A'}</div>
+          <div class="stat">📅 Person Days: ${data.personDays || 'N/A'}</div>
+          <div class="stat">👩 Women Workers: ${data.womenWorkers || 'N/A'}</div>
+          <div class="stat">🏗️ Completed Works: ${data.completedWorks || 'N/A'}</div>
+          <div class="stat">🔄 Ongoing Works: ${data.ongoingWorks || 'N/A'}</div>
+        `;
+
+      } catch (error) {
+        document.getElementById("performance").innerHTML =
+          '<div class="stat" style="border-left-color: #dc3545;">Error loading data. Please try again.</div>';
+      } finally {
+        document.getElementById("loading").style.display = 'none';
+      }
+    }
+
+    // --- SHOW RANKINGS (USING FRONTEND DEFAULT RANKINGS) ---
+    function showRankings() {
+      showPage("page4");
+
+      const rankingsDiv = document.getElementById("rankings");
+      rankingsDiv.innerHTML = "";
+
+      defaultRankings.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "stat";
+
+        if (index === 0) div.classList.add("best");
+        else if (index === defaultRankings.length - 1) div.classList.add("worst");
+
+        div.textContent = `#${item.rank} - ${item.district} (${item.rating})`;
+        rankingsDiv.appendChild(div);
+      });
+    }
+
+    // Initialize
+    loadDistricts();
+</script>
+</body>
+</html>

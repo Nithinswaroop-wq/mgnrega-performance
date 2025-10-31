@@ -1,0 +1,29 @@
+databases:
+  - name: mgnrega-db
+
+services:
+  - type: redis
+    name: mgnrega-redis
+
+  - type: web
+    name: mgnrega-backend
+    env: java
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar target/*.jar"
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: mgnrega-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: mgnrega-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: mgnrega-db
+          property: password
+      - key: REDIS_URL
+        fromService:
+          name: mgnrega-redis
+          property: connectionString
