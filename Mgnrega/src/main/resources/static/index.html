@@ -173,7 +173,9 @@
 </div>
 
 <script>
-    const API_BASE = 'http://localhost:8080/api';
+    // --- API CONFIGURATION ---
+    // Use relative path for Render deployment
+    const API_BASE = '/api';
 
     // --- DEFAULT RANKINGS (Hardcoded in Frontend) ---
     const defaultRankings = [
@@ -290,6 +292,7 @@
         `;
 
       } catch (error) {
+        console.error('Error fetching performance data:', error);
         document.getElementById("performance").innerHTML =
           '<div class="stat" style="border-left-color: #dc3545;">Error loading data. Please try again.</div>';
       } finally {
@@ -319,5 +322,6 @@
     // Initialize
     loadDistricts();
 </script>
+
 </body>
 </html>
