@@ -1,18 +1,20 @@
 databases:
   - name: mgnrega-db
     plan: free
-    ipAllowList: [ ]  # allow all IPs for now
+    ipAllowList: [ ]
 
 services:
   - type: redis
     name: mgnrega-redis
     plan: free
-    ipAllowList: [ ]  # required by Render
+    ipAllowList: [ ]
 
   - type: web
     name: mgnrega-backend
     runtime: docker
     plan: free
+    buildContext: ./Mgnrega
+    dockerfilePath: ./Mgnrega/Dockerfile
     buildCommand: "./mvnw clean package -DskipTests"
     startCommand: "java -jar target/*.jar"
     envVars:
@@ -33,5 +35,3 @@ services:
           name: mgnrega-redis
           type: redis
           property: connectionString
-    buildContext: ./Mgnrega
-    dockerfilePath: ./Mgnrega/Dockerfile
