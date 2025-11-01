@@ -13,7 +13,6 @@ services:
     name: mgnrega-backend
     runtime: docker
     plan: free
-    buildContext: ./Mgnrega
     dockerfilePath: ./Mgnrega/Dockerfile
     buildCommand: "./mvnw clean package -DskipTests"
     startCommand: "java -jar target/*.jar"
