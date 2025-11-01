@@ -5,15 +5,15 @@
  WORKDIR /app
 
  # Copy Maven wrapper and pom.xml first to leverage caching
- COPY mvnw .
- COPY .mvn .mvn
- COPY pom.xml ./
+ COPY Mgnrega/mvnw .
+ COPY Mgnrega/.mvn .mvn
+ COPY Mgnrega/pom.xml ./
 
  # Download dependencies (helps caching)
  RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 
  # Copy the rest of the project files
- COPY src ./src
+ COPY Mgnrega/src ./src
 
  # Package the application
  RUN ./mvnw clean package -DskipTests
