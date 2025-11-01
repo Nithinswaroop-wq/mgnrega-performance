@@ -1,15 +1,18 @@
 databases:
   - name: mgnrega-db
-    ipAllowList: []  # allow all IPs for now
+    plan: free
+    ipAllowList: [ ]  # allow all IPs for now
 
 services:
   - type: redis
     name: mgnrega-redis
-    ipAllowList: []  # required by Render
+    plan: free
+    ipAllowList: [ ]  # required by Render
 
   - type: web
     name: mgnrega-backend
     runtime: docker
+    plan: free
     envVars:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
