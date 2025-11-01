@@ -1,22 +1,14 @@
-# Use OpenJDK 21 as base image
+# Use OpenJDK 21 base image
 FROM openjdk:21-jdk-slim
 
-# Set working directory inside container
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml first to leverage caching
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
+# Copy the built JAR file into the container
+COPY target/*.jar app.jar
 
-# Download dependencies (helps caching)
-RUN ./mvnw dependency:go-offline -B
+# Expose the port your Spring Boot app runs on
+EXPOSE 8080
 
-# Copy the rest of the project files
-COPY src ./src
-
-# Package the application
-RUN ./mvnw clean package -DskipTests
-
-# Run the built jar file
-CMD ["java", "-jar", "target/*.jar"]
+# Command to run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
