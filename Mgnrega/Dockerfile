@@ -1,22 +1,30 @@
-# Use OpenJDK 17 base image
-FROM openjdk:21-jdk-slim AS build
+# ================================
+# Build stage
+# ================================
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy Maven project files
+# Copy pom.xml and source code
 COPY pom.xml ./
 COPY src ./src
 
-# Package the application
-RUN ./mvnw clean package -DskipTests
+# Package the app using system Maven
+RUN mvn clean package -DskipTests
 
-# Use a smaller image for runtime
-FROM openjdk:21-jdk-slim
+
+# ================================
+# Run stage
+# ================================
+FROM eclipse-temurin:21-jdk-alpine
+
 WORKDIR /app
 
-# Copy jar file from build stage
+# Copy built JAR from previous stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Run the app
+# Expose port 8080
+EXPOSE 8080
+
+# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
