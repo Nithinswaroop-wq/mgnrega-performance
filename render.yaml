@@ -13,9 +13,7 @@ services:
     name: mgnrega-backend
     runtime: docker
     plan: free
-    dockerfilePath: ./Mgnrega/Dockerfile
-    buildContext: .
-
+    dockerfilePath: ./Mgnrega/Dockerfile   # keep this path as it is
     envVars:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
@@ -32,5 +30,4 @@ services:
       - key: REDIS_URL
         fromService:
           name: mgnrega-redis
-          type: redis
           property: connectionString
