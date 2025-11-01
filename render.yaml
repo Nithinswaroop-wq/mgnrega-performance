@@ -9,7 +9,6 @@ services:
 
   - type: web
     name: mgnrega-backend
-    runtime: native
     env: java
     buildCommand: "./mvnw clean package -DskipTests"
     startCommand: "java -jar target/*.jar"
