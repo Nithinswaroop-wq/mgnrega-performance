@@ -13,6 +13,8 @@ services:
     name: mgnrega-backend
     runtime: docker
     plan: free
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar target/*.jar"
     envVars:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
@@ -31,3 +33,5 @@ services:
           name: mgnrega-redis
           type: redis
           property: connectionString
+    buildContext: ./Mgnrega
+    dockerfilePath: ./Mgnrega/Dockerfile
