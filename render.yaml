@@ -14,8 +14,6 @@ services:
     runtime: docker
     plan: free
     dockerfilePath: ./Mgnrega/Dockerfile
-    buildCommand: "./mvnw clean package -DskipTests"
-    startCommand: "java -jar target/*.jar"
     envVars:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
