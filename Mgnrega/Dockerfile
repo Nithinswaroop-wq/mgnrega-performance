@@ -13,7 +13,8 @@ COPY pom.xml .
 RUN ./mvnw dependency:go-offline -B
 
 # Copy the rest of the project files
-COPY src ./src
+COPY Mgnrega/src ./src
+
 
 # Package the application
 RUN ./mvnw clean package -DskipTests
