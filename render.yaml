@@ -13,7 +13,9 @@ services:
     name: mgnrega-backend
     runtime: docker
     plan: free
-    dockerfilePath: ./Mgnrega/Dockerfile
+    dockerfilePath: Dockerfile
+
+    buildContext: ./Mgnrega
     envVars:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
