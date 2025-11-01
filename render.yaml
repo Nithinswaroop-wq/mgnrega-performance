@@ -1,5 +1,6 @@
 databases:
   - name: mgnrega-db
+    ipAllowList: [ ]  # allow all IPs for now
 
 services:
   - type: redis
@@ -7,6 +8,7 @@ services:
 
   - type: web
     name: mgnrega-backend
+    runtime: docker
     env: java
     buildCommand: "./mvnw clean package -DskipTests"
     startCommand: "java -jar target/*.jar"
@@ -26,4 +28,5 @@ services:
       - key: REDIS_URL
         fromService:
           name: mgnrega-redis
+          type: redis
           property: connectionString
