@@ -1,32 +1,29 @@
-# ================================
-# Build stage
-# ================================
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+ # ================================
+ # Build stage
+ # ================================
+ FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-WORKDIR /app
+ WORKDIR /app
 
-# Copy Maven files
-COPY Mgnrega/pom.xml ./
-COPY Mgnrega/.mvn .mvn
-COPY Mgnrega/mvnw ./
+ # Copy pom.xml and source code
+ COPY pom.xml ./
+ COPY src ./src
 
-# Copy source code
-COPY Mgnrega/src ./src
+ # Package the app using system Maven
+ RUN mvn clean package -DskipTests
 
-# Package the app
-RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+ # ================================
+ # Run stage
+ # ================================
+ FROM eclipse-temurin:21-jdk-alpine
 
+ WORKDIR /app
 
-# ================================
-# Run stage
-# ================================
-FROM eclipse-temurin:21-jdk-alpine
+ # Copy built JAR from previous stage
+ COPY --from=build /app/target/*.jar app.jar
 
-WORKDIR /app
+ # Expose port 8080
+ EXPOSE 8080
 
-# Copy built JAR
-COPY --from=build /app/target/*.jar app.jar
-
-EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ # Run the application
+ ENTRYPOINT ["java", "-jar", "app.jar"]
