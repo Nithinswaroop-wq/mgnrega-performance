@@ -5,10 +5,11 @@ databases:
 services:
   - type: redis
     name: mgnrega-redis
+    ipAllowList: [ ]  # required by Render
 
   - type: web
     name: mgnrega-backend
-    runtime: docker
+    runtime: native
     env: java
     buildCommand: "./mvnw clean package -DskipTests"
     startCommand: "java -jar target/*.jar"
