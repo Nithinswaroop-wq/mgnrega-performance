@@ -1,25 +1,22 @@
- # Use OpenJDK 21 as base image
- FROM openjdk:21-jdk-slim
+# Use OpenJDK 17 base image
+FROM openjdk:21-jdk-slim AS build
 
- # Set working directory inside container
- WORKDIR /app
+# Set working directory
+WORKDIR /app
 
- # Copy Maven wrapper and pom.xml first to leverage caching
- COPY Mgnrega/mvnw .
- COPY Mgnrega/.mvn .mvn
- COPY Mgnrega/pom.xml ./
+# Copy Maven project files
+COPY pom.xml ./
+COPY src ./src
 
- # Download dependencies (helps caching)
- RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+# Package the application
+RUN ./mvnw clean package -DskipTests
 
- # Copy the rest of the project files
- COPY Mgnrega/src ./src
+# Use a smaller image for runtime
+FROM openjdk:21-jdk-slim
+WORKDIR /app
 
- # Package the application
- RUN ./mvnw clean package -DskipTests
+# Copy jar file from build stage
+COPY --from=build /app/target/*.jar app.jar
 
- # Expose port
- EXPOSE 8080
-
- # Run the built jar file
- CMD ["sh", "-c", "java -jar target/*.jar"]
+# Run the app
+ENTRYPOINT ["java", "-jar", "app.jar"]
