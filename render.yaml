@@ -1,17 +1,15 @@
 databases:
   - name: mgnrega-db
-    ipAllowList: [ ]  # allow all IPs for now
+    ipAllowList: []  # allow all IPs for now
 
 services:
   - type: redis
     name: mgnrega-redis
-    ipAllowList: [ ]  # required by Render
+    ipAllowList: []  # required by Render
 
   - type: web
     name: mgnrega-backend
-    env: java
-    buildCommand: "./mvnw clean package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    runtime: docker
     envVars:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
